@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Capsule.Service.ConsoleHost": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
