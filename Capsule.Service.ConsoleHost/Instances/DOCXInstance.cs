@@ -1,5 +1,4 @@
 ﻿using ImageMagick;
-using XBMall.Server.Image;
 
 namespace Capsule.Service.ConsoleHost.Instances
 {

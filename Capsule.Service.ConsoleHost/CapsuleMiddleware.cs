@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Filters;
-using System.Net.Http;
-using System.Threading.Tasks;
 
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
     class CapsuleMiddleware
     {

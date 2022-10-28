@@ -1,4 +1,4 @@
-﻿namespace XBMall.Server.Image
+﻿namespace Capsule.Service.ConsoleHost
 {
     public class CapsuleOptions
     {

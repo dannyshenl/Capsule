@@ -1,6 +1,6 @@
 ﻿using ImageMagick;
 
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
     internal class CapsuleInfo
     {

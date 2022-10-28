@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.IO.Pipelines;
 
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
 
     internal class CapsuleResponseBody

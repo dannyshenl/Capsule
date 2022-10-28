@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
     internal class CapsuleResponse
     {

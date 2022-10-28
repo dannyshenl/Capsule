@@ -1,5 +1,4 @@
-﻿using Capsule.Service.ConsoleHost;
-using ImageMagick;
+﻿using ImageMagick;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.StaticFiles;
@@ -7,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Net;
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
     internal class CapsuleDispatch
     {

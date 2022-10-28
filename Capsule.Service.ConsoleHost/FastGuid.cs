@@ -1,19 +1,10 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-
-using System;
-using System.Threading;
-
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
     internal class FastGuid
     {
-        // Base32 encoding - in ascii sort order for easy text based sorting
         private static readonly char[] s_encode32Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUV".ToCharArray();
-        // Global ID
         private static long NextId;
 
-        // Instance components
         private string _idString;
 
         internal long IdValue { get; }
@@ -30,12 +21,9 @@ namespace XBMall.Server.Image
             }
         }
 
-        // Static constructor to initialize global components
         static FastGuid()
         {
             var guidBytes = Guid.NewGuid().ToByteArray();
-
-            // Use the first 4 bytes from the Guid to initialize global ID
             NextId =
                 guidBytes[0] << 32 |
                 guidBytes[1] << 40 |

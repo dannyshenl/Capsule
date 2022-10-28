@@ -1,11 +1,9 @@
-﻿using Capsule.Service.ConsoleHost;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
-namespace XBMall.Server.Image
+namespace Capsule.Service.ConsoleHost
 {
     class Startup : StartupBase
     {
