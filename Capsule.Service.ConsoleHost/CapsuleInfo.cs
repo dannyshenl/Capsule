@@ -4,6 +4,8 @@ namespace Capsule.Service.ConsoleHost
 {
     internal class CapsuleInfo
     {
+        public string RealName { get; set; }
+
         public string Name { get; set; }
 
         public string FileName { get; set; }
@@ -27,5 +29,10 @@ namespace Capsule.Service.ConsoleHost
         public MagickFormat MagickFormat { get; set; }
 
         public string ContenType { get; set; }
+
+        public string ToSaveName()
+        {
+            return $"{RealName}_{Name}{Extension}";
+        }
     }
 }

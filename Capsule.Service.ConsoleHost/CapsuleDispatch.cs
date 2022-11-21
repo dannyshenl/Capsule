@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Net;
+using System.Web;
+
 namespace Capsule.Service.ConsoleHost
 {
     internal class CapsuleDispatch
@@ -83,9 +85,15 @@ namespace Capsule.Service.ConsoleHost
             return (long)Math.Pow(10, y);
         }
 
-        private bool Validation(IFormFile formFile, IDictionary<string, List<byte[]>> signatures, out string fileExtension)
+        private bool Validation(IFormFile formFile, IDictionary<string, List<byte[]>> signatures, out string[] fileInfo)
         {
-            fileExtension = Path.GetExtension(formFile.FileName);
+            fileInfo = formFile.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            fileInfo[1] = "." + fileInfo[1];
+            if (fileInfo.Length < 2)
+            {
+                return false;
+            }
+            var fileExtension = fileInfo[1];
             if (string.IsNullOrWhiteSpace(fileExtension))
             {
                 return false;
@@ -106,7 +114,7 @@ namespace Capsule.Service.ConsoleHost
             return false;
         }
 
-        private CapsuleInfo BuildCapsuleInfo(string fileExtension)
+        private CapsuleInfo BuildCapsuleInfo(IFormFile formFile, string[] fileInfo)
         {
             var timestamp = DateTime.Now;
             long year = timestamp.Year;
@@ -126,11 +134,12 @@ namespace Capsule.Service.ConsoleHost
                 }
                 seed = _seed;
             }
-            if (_capsuleInstancesKV.TryGetValue(fileExtension, out var capsuleInstance))
+            if (_capsuleInstancesKV.TryGetValue(fileInfo[1], out var capsuleInstance))
             {
                 var capsuleInfo = capsuleInstance.CreateInfo();
+                capsuleInfo.RealName = fileInfo[0];
                 capsuleInfo.Name = $"{key}{capsuleInfo.FileTypeValue}{_seed.ToString().PadLeft(3, '0')}";
-                capsuleInfo.FileName = capsuleInfo.Name + capsuleInfo.Extension;
+                capsuleInfo.FileName = $"{capsuleInfo.RealName}_{capsuleInfo.Name}{capsuleInfo.Extension}";
                 capsuleInfo.RelativeDirectory = Path.Combine(timestamp.Year.ToString(), timestamp.Month.ToString(), timestamp.Day.ToString());
                 capsuleInfo.RelativePath = $"{capsuleInfo.RelativeDirectory}//{capsuleInfo.FileName}";
                 capsuleInfo.AbsolutelyDirectory = Path.Combine(_capsuleOptions.StoragePath, capsuleInfo.RelativeDirectory);
@@ -143,6 +152,19 @@ namespace Capsule.Service.ConsoleHost
 
         private bool TryAnalysisCapsuleInfo(string capsuleName, out CapsuleInfo capsuleInfo)
         {
+            capsuleName = HttpUtility.UrlDecode(capsuleName);
+            var indexOfPoint = capsuleName.LastIndexOf(".");
+            if (indexOfPoint > 0)
+            {
+                capsuleName = capsuleName.Substring(0, indexOfPoint);
+            }
+            var indexOfCapsuleInfo = capsuleName.LastIndexOf('_');
+            var realName = capsuleName;
+            if (indexOfCapsuleInfo >= 0)
+            {
+                realName = capsuleName.Substring(0, indexOfCapsuleInfo);
+                capsuleName = capsuleName.Substring(indexOfCapsuleInfo + 1);
+            }
             capsuleInfo = null;
             try
             {
@@ -166,9 +188,17 @@ namespace Capsule.Service.ConsoleHost
                     capsuleInfo = _capsuleInstancesKV[$"." + fileType.ToString().ToLower()].CreateInfo();
 
                     var timestamp = new DateTime(int.Parse(year), 1, 1).AddDays(int.Parse(dayOfYear) - 1);
+                    capsuleInfo.RealName = realName;
                     capsuleInfo.Name = capsuleName;
                     capsuleInfo.FileTypeValue = int.Parse(fileTypeValue);
-                    capsuleInfo.FileName = capsuleInfo.Name + capsuleInfo.Extension;
+                    if (capsuleInfo.RealName == capsuleInfo.Name)
+                    {
+                        capsuleInfo.FileName = capsuleInfo.RealName + capsuleInfo.Extension;
+                    }
+                    else
+                    {
+                        capsuleInfo.FileName = $"{capsuleInfo.RealName}_{capsuleInfo.Name}{capsuleInfo.Extension}";
+                    }
                     capsuleInfo.RelativeDirectory = Path.Combine(year, timestamp.Month.ToString(), timestamp.Day.ToString());
                     capsuleInfo.RelativePath = $"{capsuleInfo.RelativeDirectory}//{capsuleInfo.FileName}";
                     capsuleInfo.AbsolutelyDirectory = Path.Combine(_capsuleOptions.StoragePath, capsuleInfo.RelativeDirectory);
@@ -186,9 +216,9 @@ namespace Capsule.Service.ConsoleHost
             return true;
         }
 
-        private async Task<string> SaveCapsule(IFormFile formFile, string fileExtenison)
+        private async Task<string> SaveCapsule(IFormFile formFile, string[] fileInfo)
         {
-            var capsuleInfo = BuildCapsuleInfo(fileExtenison);
+            var capsuleInfo = BuildCapsuleInfo(formFile, fileInfo);
             if (!Directory.Exists(capsuleInfo.AbsolutelyDirectory))
             {
                 Directory.CreateDirectory(capsuleInfo.AbsolutelyDirectory);
@@ -209,7 +239,7 @@ namespace Capsule.Service.ConsoleHost
                 image.Quality = _capsuleOptions.Quality;
                 await image.WriteAsync(Path.Combine(capsuleInfo.AbsolutelyDirectory, $"{capsuleInfo.Name}{_lowQ}{capsuleInfo.Extension}"));
             }
-            return capsuleInfo.Name;
+            return capsuleInfo.ToSaveName();
         }
 
 
@@ -243,12 +273,10 @@ namespace Capsule.Service.ConsoleHost
             httpContext.Response.ContentType = contentType;
         }
 
-
-
         private void SetContentDispositionHeader(HttpContext httpContext, CapsuleInfo capsuleInfo)
         {
             var contentDisposition = new ContentDispositionHeaderValue("attachment");
-            contentDisposition.SetHttpFileName(capsuleInfo.FileName);
+            contentDisposition.SetHttpFileName(capsuleInfo.RealName + capsuleInfo.Extension);
             httpContext.Response.Headers[HeaderNames.ContentDisposition] = contentDisposition.ToString();
         }
 
@@ -263,9 +291,9 @@ namespace Capsule.Service.ConsoleHost
                     var data = new List<string>();
                     foreach (var file in request.Form.Files)
                     {
-                        if (Validation(file, _imageFileSignatures, out var fileExtension))
+                        if (Validation(file, _imageFileSignatures, out var fileInfo))
                         {
-                            data.Add(await SaveCapsule(file, fileExtension));
+                            data.Add(await SaveCapsule(file, fileInfo));
                         }
                         else
                         {
