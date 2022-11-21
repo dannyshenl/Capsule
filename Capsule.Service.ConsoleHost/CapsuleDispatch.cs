@@ -87,13 +87,14 @@ namespace Capsule.Service.ConsoleHost
 
         private bool Validation(IFormFile formFile, IDictionary<string, List<byte[]>> signatures, out string[] fileInfo)
         {
-            fileInfo = formFile.FileName.Split('.', StringSplitOptions.RemoveEmptyEntries);
-            fileInfo[1] = "." + fileInfo[1];
-            if (fileInfo.Length < 2)
+            fileInfo = new string[2];
+            var indexOfPoint = formFile.FileName.LastIndexOf('.');
+            if (indexOfPoint <= 0)
             {
                 return false;
             }
-            var fileExtension = fileInfo[1];
+            fileInfo[0] = formFile.FileName.Substring(0, indexOfPoint);
+            var fileExtension = fileInfo[1] = formFile.FileName.Substring(indexOfPoint);
             if (string.IsNullOrWhiteSpace(fileExtension))
             {
                 return false;
